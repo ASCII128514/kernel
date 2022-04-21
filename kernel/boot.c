@@ -34,6 +34,11 @@ static struct stivale2_header_tag_terminal terminal_hdr_tag = {
         .next = (uintptr_t)&unmap_null_hdr_tag},
     .flags = 0};
 
+static struct stivale2_header_tag_smp smp_tag = {
+    .tag = {
+        .identifier = STIVALE2_HEADER_TAG_SMP_ID,
+        .next = (uintptr_t)&terminal_hdr_tag},
+    .flags = 1};
 
 // Declare the header for the bootloader
 __attribute__((section(".stivale2hdr"), used)) static struct stivale2_header stivale_hdr = {
@@ -50,7 +55,7 @@ __attribute__((section(".stivale2hdr"), used)) static struct stivale2_header sti
     .flags = 0x1E,
 
     // First tag struct
-    .tags = (uintptr_t)&terminal_hdr_tag};
+    .tags = (uintptr_t)&smp_tag};
 
 // Find a tag with a given ID
 void *find_tag(struct stivale2_struct *hdr, uint64_t id) {
@@ -88,6 +93,11 @@ void term_setup(struct stivale2_struct *hdr) {
 }
 
 
+void func() {
+  kprintf("hello world\n");
+  halt();
+}
+
 void _start(struct stivale2_struct *hdr) {
   // We've booted! Let's start processing tags passed to use from the bootloader
   term_setup(hdr);
@@ -95,6 +105,7 @@ void _start(struct stivale2_struct *hdr) {
   // Set up the interrupt descriptor table and global descriptor table
   idt_setup();
   gdt_setup();
+  // smp_setup();
 
   // Find the start of higher half direct map (virtual memory)
   struct stivale2_struct_tag_hhdm *virtual = find_tag(hdr, STIVALE2_STRUCT_TAG_HHDM_ID);
@@ -102,11 +113,14 @@ void _start(struct stivale2_struct *hdr) {
   // Get information about physical memory
   struct stivale2_struct_tag_memmap *physical = find_tag(hdr, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
+  struct stivale2_struct_tag_smp *smp = find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID);
+
   // Set up the free list and enable write protection
   freelist_init(virtual, physical);
 
   // Initialize the terminal
   term_init();
+
 
   // Set up keyboard interrupts
   pic_init();
@@ -116,25 +130,36 @@ void _start(struct stivale2_struct *hdr) {
   uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
   unmap_lower_half(root);
 
+  for (int i = 0; i < smp->cpu_count; i++)
+  {
+    uintptr_t cpu_stack = 0x70000000000 + 8 * PAGE_SIZE * i;
+    size_t user_stack_size = 8 * PAGE_SIZE;
+
+    // Map the user-mode-stack
+    for (uintptr_t p = cpu_stack; p < cpu_stack + user_stack_size; p += 0x1000)
+    {
+      // Map a page that is user-accessible, writable, but not executable
+      vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, p, true, true, false);
+    }
+    smp->smp_info[i].target_stack = cpu_stack;
+    kprintf("%p\n", cpu_stack);
+  }
+
+  for (int i = 1; i < smp->cpu_count; i++)
+  {
+    smp->smp_info[i].goto_address = (uint64_t)(func);
+  }
+
   // Get information about the modules we've asked the bootloader to load
   struct stivale2_struct_tag_modules *modules = find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);
   // Save information about the modules to be accessed later when we make an exec system call
   module_setup(modules);
 
 
-  // Test that user programs really run in user mode.
-  // Map some memory in the lower half. Does not generate a page fault when written to in init
-  // (commented lines of init)
-  uintptr_t test_page2 = 0x600000000;
-  vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, test_page2, true, true, false);
-
-  // Map some memory in the higher half.
-  // Generates a page fault when accessed from user mode (commented lines of helloworld)
-  intptr_t higher_half_addr = 0xffff800000001000;
-  vm_map(root, higher_half_addr, 0, 1, 0);
-
+  kprintf("number of tags: %d\n", smp->cpu_count);
   // Launch the init program
-  for (int i = 0; i < modules->module_count; i++) {
+  for (int i = 0; i < modules->module_count; i++)
+  {
     if (!strcmp(modules->modules[i].string, "init")) {
       run_program(modules->modules[i].begin);
     }
