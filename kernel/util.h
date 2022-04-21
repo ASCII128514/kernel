@@ -5,4 +5,5 @@ static void halt() {
   while (1) {
     __asm__("hlt");
   }
+  return;
 }

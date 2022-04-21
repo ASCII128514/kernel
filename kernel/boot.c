@@ -121,40 +121,14 @@ void _start(struct stivale2_struct *hdr) {
   // Save information about the modules to be accessed later when we make an exec system call
   module_setup(modules);
 
-  // Test for mmap (lines 125 - 143). The code generates a page fault if mmap is not called.
-  // Map to a specified address
-  // char* test_page = (char*) 0x400000000;
-  // sys_mmap(test_page, 9000, 3, 0, 0, 0);
-
-  // Let the kernel pick the address to map to
-  char *test_page = (char *)sys_mmap(NULL, 9000, 3, 0, 0, 0);
-
-  // Write to the first page mapped
-  char *test_str = "test";
-  for(int i = 0; i < strlen(test_str); i++) {
-    test_page[i] = test_str[i];
-  }
-
-  // Write to the second page
-  test_str = "mmap";
-  for(int i = 0; i < strlen(test_str); i++) {
-    test_page[5000+i] = test_str[i];
-  }
-
-  // Print what we wrote.
-  kprintf("%s %s\n", test_page, &(test_page[5000]));
-
-  // Test kprintf
-  char string[12] = "abc,def,ghi";
-  kprintf("kprintf test: %c, %s, %d, %x, %p\n", string[0], string, 123, 123, string);
 
   // Test that user programs really run in user mode.
-  // Map some memory in the lower half. Does not generate a page fault when written to in init 
+  // Map some memory in the lower half. Does not generate a page fault when written to in init
   // (commented lines of init)
   uintptr_t test_page2 = 0x600000000;
   vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, test_page2, true, true, false);
 
-  // Map some memory in the higher half. 
+  // Map some memory in the higher half.
   // Generates a page fault when accessed from user mode (commented lines of helloworld)
   intptr_t higher_half_addr = 0xffff800000001000;
   vm_map(root, higher_half_addr, 0, 1, 0);
