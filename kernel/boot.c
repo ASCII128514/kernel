@@ -15,6 +15,9 @@
 #include "gdt.h"
 #include "posix.h"
 
+// https://stackoverflow.com/questions/865862/printf-the-current-address-in-c-program
+#define ADDRESS_HERE() ({ void *p; __asm__("1: mov 1b, %0" : "=r" (p)); p; })
+
 // TODO: Stopped just before Re-enabling System Calls
 //  need to set up the TSS and maybe do more things after that
 
@@ -95,6 +98,19 @@ void term_setup(struct stivale2_struct *hdr) {
 
 void func() {
   kprintf("hello world\n");
+  int val = 1;
+  if (val) {
+    val = 0;
+    void *here = ADDRESS_HERE();
+    // kprintf("core: %d, address: %p\n", ADDRESS_HERE());
+  } else {
+    kprintf("ppppppp\n");
+  }
+  halt();
+}
+
+void func2()
+{
   halt();
 }
 
@@ -105,7 +121,6 @@ void _start(struct stivale2_struct *hdr) {
   // Set up the interrupt descriptor table and global descriptor table
   idt_setup();
   gdt_setup();
-  // smp_setup();
 
   // Find the start of higher half direct map (virtual memory)
   struct stivale2_struct_tag_hhdm *virtual = find_tag(hdr, STIVALE2_STRUCT_TAG_HHDM_ID);
@@ -147,7 +162,16 @@ void _start(struct stivale2_struct *hdr) {
 
   for (int i = 1; i < smp->cpu_count; i++)
   {
-    smp->smp_info[i].goto_address = (uint64_t)(func);
+    if (i == 1) {
+
+      smp->smp_info[i].extra_argument = i;
+      smp->smp_info[i].goto_address = (uint64_t)(func);
+    } else if (i == 2){
+      // for (int i = 0; i < 0xf0000000;i++){};
+      // smp->smp_info[i].goto_address = (uint64_t)(func);
+    } else {
+      smp->smp_info[i].goto_address = (uint64_t)(func2);
+    }
   }
 
   // Get information about the modules we've asked the bootloader to load
