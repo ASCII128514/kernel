@@ -1,5 +1,7 @@
 #include "unistd.h"
 
+lock_t print_lock = {.num_locks = 1};
+
 /**
  * Mimics functionality of C standard library read function.
  * Reads nbyte bytes of data from the location referenced by fildes
@@ -112,6 +114,9 @@ void print_x_helper(uint64_t value)
  * and %p (pointer).
  */
 void printf(const char *format, ...) {
+
+  // lock the function
+  lock(&print_lock);
   // Start processing variadic arguments
   va_list args;
   va_start(args, format);
@@ -175,4 +180,7 @@ void printf(const char *format, ...) {
 
   // Finish handling variadic arguments
   va_end(args);
+
+  // unlock the function
+  unlock(&print_lock);
 }

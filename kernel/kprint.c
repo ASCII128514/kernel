@@ -1,5 +1,7 @@
 #include "kprint.h"
 
+lock_t kprint_lock = {.num_locks = 1};
+
 /**
  * Print a character to the terminal
  * \param c the character to be printed
@@ -80,6 +82,9 @@ void kprint_p(void *ptr) {
  * and %p (pointer).
  */
 void kprintf(const char *format, ...) {
+
+  // lock the function
+  lock(&kprint_lock);
   // Start processing variadic arguments
   va_list args;
   va_start(args, format);
@@ -122,4 +127,6 @@ void kprintf(const char *format, ...) {
 
   // Finish handling variadic arguments
   va_end(args);
+  // unlock the function
+  unlock(&kprint_lock);
 }

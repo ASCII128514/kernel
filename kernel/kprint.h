@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "term.h"
+#include "lock.h"
 
 /**
  * Mimic the basic functionality of printf. Given a format string and

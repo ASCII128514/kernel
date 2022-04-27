@@ -14,6 +14,7 @@
 #include "elf.h"
 #include "gdt.h"
 #include "posix.h"
+#include "lock.h"
 
 // https://stackoverflow.com/questions/865862/printf-the-current-address-in-c-program
 #define ADDRESS_HERE() ({ void *p; __asm__("1: mov 1b, %0" : "=r" (p)); p; })
@@ -97,24 +98,7 @@ void term_setup(struct stivale2_struct *hdr)
 
 int lock_int = 1;
 
-typedef struct lock_struct
-{
-  volatile int num_locks;
-} lock_t;
 lock_t our_lock = {.num_locks = 1};
-
-void lock(lock_t *lock)
-{
-  int expected = 1;
-  // __atomic_compare_exchange_n(type * ptr, type * expected, type desired, bool weak, int success_memorder, int failure_memorder) return 1;
-  while (__atomic_compare_exchange_n(&(lock->num_locks), &expected, 0, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) == 0)
-    expected = 1;
-}
-
-void unlock(lock_t *lock)
-{
-  lock->num_locks = 1;
-}
 
 void func()
 {
@@ -208,7 +192,7 @@ void _start(struct stivale2_struct *hdr)
     // }
   }
 
-  halt();
+  // halt();
   // Get information about the modules we've asked the bootloader to load
   struct stivale2_struct_tag_modules *modules = find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);
   // Save information about the modules to be accessed later when we make an exec system call

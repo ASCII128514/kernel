@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <syscall.h>
+#include "lock.h"
 
 #define STDOUT 1
 #define STDIN 0
