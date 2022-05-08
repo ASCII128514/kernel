@@ -25,7 +25,6 @@
   })
 
 lock_t fork_lock = {.num_locks = 1};
-struct stivale2_struct_tag_smp *smp;
 
 // TODO: Stopped just before Re-enabling System Calls
 //  need to set up the TSS and maybe do more things after that
@@ -66,26 +65,6 @@ __attribute__((section(".stivale2hdr"),
     // First tag struct
     .tags = (uintptr_t)&smp_tag};
 
-// Find a tag with a given ID
-void *find_tag(struct stivale2_struct *hdr, uint64_t id) {
-  // Start at the first tag
-  struct stivale2_tag *current = (struct stivale2_tag *)hdr->tags;
-
-  // Loop as long as there are more tags to examine
-  while (current != NULL) {
-    // Does the current tag match?
-    if (current->identifier == id) {
-      return current;
-    }
-
-    // Move to the next tag
-    current = (struct stivale2_tag *)current->next;
-  }
-
-  // No matching tag found
-  return NULL;
-}
-
 void term_setup(struct stivale2_struct *hdr) {
   // Look for a terminal tag
   struct stivale2_struct_tag_terminal *tag =
@@ -113,23 +92,6 @@ void func() {
 
 void func2() { halt(); }
 
-
-void init_cpus() {
-  for (int i = 0; i < smp->cpu_count; i++) {
-    uintptr_t cpu_stack = 0x70000000000 + 8 * PAGE_SIZE * i;
-    size_t user_stack_size = 8 * PAGE_SIZE;
-
-    // Map the user-mode-stack
-    for (uintptr_t p = cpu_stack; p < cpu_stack + user_stack_size;
-         p += 0x1000) {
-      // Map a page that is user-accessible, writable, but not executable
-      vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, p, true, true, false);
-    }
-
-    smp->smp_info[i].target_stack = cpu_stack;
-  }
-}
-
 int available_cpus[] = {false, true, true, true};
 
 int fork() {
@@ -147,7 +109,6 @@ int fork() {
 }
 
 void _start(struct stivale2_struct *hdr) {
-  smp = find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID);
   // We've booted! Let's start processing tags passed to use from the bootloader
   term_setup(hdr);
 
@@ -163,7 +124,6 @@ void _start(struct stivale2_struct *hdr) {
   struct stivale2_struct_tag_memmap *physical =
       find_tag(hdr, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
-
   // Set up the free list and enable write protection
   freelist_init(virtual, physical);
 
@@ -177,16 +137,21 @@ void _start(struct stivale2_struct *hdr) {
   // Unmap the lower half of memory
   uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
   unmap_lower_half(root);
+  kprintf("here\n");
 
-  init_cpus();
+  // Initialize the stacks for each cpu
+  init_cpus(hdr);
 
-  /* kprintf("hi: %d\n", our_lock.num_locks); */
+  kprintf("here\n");
+  kprintf("smp: %p\n", smp);
+  for (int i = 1; i < smp->cpu_count; i++) {
+    kprintf("goto address of %d: %p\n", i, smp->smp_info[i].goto_address);
+  }
 
-  kprintf("address here %p\naddress here %p\n", ADDRESS_HERE(), ADDRESS_HERE());
-
-  int a = fork();
-  kprintf("here a: %d \n", a);
-  halt();
+  /* kprintf("%d\n", start_other_core(func)); */
+  /* int a = fork(); */
+  /* kprintf("here a: %d \n", a); */
+  /* halt(); */
 
   /* for (int i = 1; i < smp->cpu_count; i++) { */
   /*   smp->smp_info[i].goto_address = (uint64_t)(func); */

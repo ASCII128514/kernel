@@ -1,4 +1,6 @@
 #include "unistd.h"
+#include <stdint.h>
+#include <syscall.h>
 
 lock_t print_lock = {.num_locks = 1};
 
@@ -183,4 +185,8 @@ void printf(const char *format, ...) {
 
   // unlock the function
   unlock(&print_lock);
+}
+
+bool start_other_core (uintptr_t address) {
+  return 1 == syscall(SYS_start_other_core, address);
 }

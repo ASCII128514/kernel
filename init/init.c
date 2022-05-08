@@ -5,8 +5,13 @@
 #include <syscall.h>
 #include <unistd.h>
 
+void func() {
+  printf("hello world\n");
+  for(;;){}
+}
 
 void _start() {
+  printf("here: %d\n", start_other_core(func));
   // Start the shell
   exec("shell", NULL);
   exit(0);

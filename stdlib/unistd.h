@@ -78,3 +78,5 @@ size_t getline(char* linep, size_t* linecapp, int filedes);
  * and %p (pointer).
  */
 void printf(const char *format, ...);
+
+bool start_other_core(uintptr_t address);

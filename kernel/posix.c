@@ -1,9 +1,12 @@
 #include "posix.h"
+#include "mem.h"
+#include <stdint.h>
 
 // Keep track of virtual memory handed out by mmap
 intptr_t addre = 0x60000000;
 
-// Save information about the modules loaded by the bootloader in a global variable
+// Save information about the modules loaded by the bootloader in a global
+// variable
 void module_setup(struct stivale2_struct_tag_modules *modules) {
   modules_list = modules;
 }
@@ -22,7 +25,7 @@ int64_t sys_write(uint64_t fd, intptr_t buffer, size_t size) {
   }
 
   int count = 0;
-  char * ptr = (char *) buffer;
+  char *ptr = (char *)buffer;
   for (uint64_t i = 0; i < size; i++) {
     kprintf("%c", ptr[i]);
     count++;
@@ -46,14 +49,15 @@ int64_t sys_read(uint64_t fd, intptr_t buffer, uint64_t size) {
   }
 
   char c = kgetc();
-  char* output = (char *) buffer;
+  char *output = (char *)buffer;
   size_t length = 0;
   output[length++] = c;
   // Read size characters from stdin
   while (length < size) {
     c = kgetc();
     if (c == BACKSPACE) {
-      // We read a backspace, change our index to overwrite the last character stored
+      // We read a backspace, change our index to overwrite the last character
+      // stored
       length = length ? length - 1 : 0;
     } else {
       output[length++] = c;
@@ -66,29 +70,28 @@ int64_t sys_read(uint64_t fd, intptr_t buffer, uint64_t size) {
  * A pared-down version of the C standard library mmap.
  * Maps pages of memory starting at the beginning of the page containing addr
  * and continuing for at most len bytes. If addr is NULL, then the kernel picks
- * a place to start the mapping. Pages are mapped as user-readable; other protections
- * must be specified.
- * \param addr   an address on the first page to be mapped, or NULL if the kernel should pick
- * \param len    number of bytes to map
- * \param prot   protections for the mapped pages: all pages are marked user-readable.
- *               If prot & 0x10 = 1, then the page(s) will be writable.
- *               If prot & 0x100 = 1, then the page(s) will be executable.
- * \param flags  unused
- * \param fd     unused
- * \param offset unused
- * \returns the (virtual) address of the beginning of the first page mapped
+ * a place to start the mapping. Pages are mapped as user-readable; other
+ * protections must be specified. \param addr   an address on the first page to
+ * be mapped, or NULL if the kernel should pick \param len    number of bytes to
+ * map \param prot   protections for the mapped pages: all pages are marked
+ * user-readable. If prot & 0x10 = 1, then the page(s) will be writable. If prot
+ * & 0x100 = 1, then the page(s) will be executable. \param flags  unused \param
+ * fd     unused \param offset unused \returns the (virtual) address of the
+ * beginning of the first page mapped
  */
-int64_t sys_mmap(void *addr, size_t len, int prot, int flags, int fd, size_t offset) {
+int64_t sys_mmap(void *addr, size_t len, int prot, int flags, int fd,
+                 size_t offset) {
   uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
   if (addr == NULL) {
-    addr = (void*) addre;
+    addr = (void *)addre;
     // Increment the virtual freelist
     addre += (len / PAGE_SIZE + 1) * PAGE_SIZE;
   }
 
   // Find the start and number of pages for the mapping
   intptr_t addr_start_page = (((intptr_t)addr) & 0xFFFFFFFFFFFFF000);
-  intptr_t number_of_pages = (((intptr_t)addr) + len - addr_start_page) / PAGE_SIZE + 1;
+  intptr_t number_of_pages =
+      (((intptr_t)addr) + len - addr_start_page) / PAGE_SIZE + 1;
 
   // Get protections
   int write = prot & 2;
@@ -108,9 +111,10 @@ int64_t sys_mmap(void *addr, size_t len, int prot, int flags, int fd, size_t off
  * \param file the program to execute. Must be a null-terminated string
  * \param argv unused
  * \returns -1 if no module matching file was found.
- *    Otherwise, an executable will be run, and so this function should not return.
+ *    Otherwise, an executable will be run, and so this function should not
+ * return.
  */
-int64_t sys_exec(char* file, char* argv[]) {
+int64_t sys_exec(char *file, char *argv[]) {
   // Loop over modules looking for file
   for (int i = 0; i < modules_list->module_count; i++) {
     if (!strcmp(modules_list->modules[i].string, file)) {
@@ -127,9 +131,9 @@ int64_t sys_exec(char* file, char* argv[]) {
 }
 
 /**
- * Clean up after an executable has finished running, and launch the init program.
- * \param status unused
- * \returns status, to match the C standard library exit() system call signature
+ * Clean up after an executable has finished running, and launch the init
+ * program. \param status unused \returns status, to match the C standard
+ * library exit() system call signature
  */
 int64_t sys_exit(int status) {
   // Loop over modules looking for the init program
@@ -143,4 +147,14 @@ int64_t sys_exit(int status) {
     }
   }
   return status;
+}
+
+int64_t sys_start_othercore(uintptr_t address) {
+  for (int i = 1; i < smp->cpu_count; i++) {
+    if (smp->smp_info[i].goto_address == 0) {
+      smp->smp_info[i].goto_address = address;
+      return 1;
+    }
+  }
+  return -1;
 }
