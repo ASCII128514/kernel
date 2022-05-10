@@ -15,6 +15,7 @@
 #include "posix.h"
 #include "stivale2.h"
 #include "util.h"
+#include "word-count.h"
 
 // https://stackoverflow.com/questions/865862/printf-the-current-address-in-c-program
 #define ADDRESS_HERE()                                                         \
@@ -144,7 +145,9 @@ void _start(struct stivale2_struct *hdr) {
 
   kprintf("here\n");
   kprintf("smp: %p\n", smp);
-  for (int i = 1; i < smp->cpu_count; i++) {
+  // word_count_main(int argc, char **argv);
+  for (int i = 1; i < smp->cpu_count; i++)
+  {
     kprintf("goto address of %d: %p\n", i, smp->smp_info[i].goto_address);
   }
 
