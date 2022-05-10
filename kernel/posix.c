@@ -136,9 +136,10 @@ int64_t sys_exec(char *file, char *argv[]) {
  * library exit() system call signature
  */
 int64_t sys_exit(int status) {
+
   // Loop over modules looking for the init program
   for (int i = 0; i < modules_list->module_count; i++) {
-    if (!strcmp(modules_list->modules[i].string, "init")) {
+    if (!strcmp(modules_list->modules[i].string, "shell")) {
       // We found it! Unmap the lower half of memory
       uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
       unmap_lower_half(root);
@@ -146,15 +147,22 @@ int64_t sys_exit(int status) {
       run_program(modules_list->modules[i].begin);
     }
   }
+  
   return status;
 }
 
 int64_t sys_start_othercore(uintptr_t address) {
+
+  kprintf("inside the kernel syscall about to set the goto to %p\n", address);
+
   for (int i = 1; i < smp->cpu_count; i++) {
     if (smp->smp_info[i].goto_address == 0) {
+      kprintf("cpu number %d is available to be used!\n", i);
       smp->smp_info[i].goto_address = address;
+      kprintf("i've just set the address!\n");
       return 1;
     }
   }
+  
   return -1;
 }

@@ -54,3 +54,5 @@ typedef struct phdr {
  */
 void run_program(intptr_t addr);
 
+void run_program_kernel(intptr_t addr);
+

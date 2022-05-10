@@ -153,24 +153,25 @@ __attribute__((interrupt)) void irq1_interrupt_handler(interrupt_context_t *ctx)
  */
 int64_t syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) {
   switch (nr) {
-  case SYS_write:
+  case 1:
     return sys_write(arg0, arg1, arg2);
 
-  case SYS_read:
+  case 0:
     return sys_read(arg0, arg1, arg2);
 
-  case SYS_mmap:
+  case 2:
     return sys_mmap((void *)arg0, arg1, arg2, arg3, arg4, arg5);
 
-  case SYS_exec:
+  case 3:
     return sys_exec((char*) arg0, (char**) arg1);
 
-  case SYS_exit:
+  case 4:
     return sys_exit(arg0);
 
-  case SYS_start_other_core:
+  case 5:
+    kprintf("inside the syscall handler with address %p\n", arg0);
     return sys_start_othercore(arg0);
-
+    
   default:
     return 0;
   }

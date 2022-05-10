@@ -188,5 +188,6 @@ void printf(const char *format, ...) {
 }
 
 bool start_other_core (uintptr_t address) {
+  printf("in the stdlib about to start my syscall with address %p\n", address);
   return 1 == syscall(SYS_start_other_core, address);
 }

@@ -511,21 +511,24 @@ void *find_tag(struct stivale2_struct *hdr, uint64_t id) {
   // No matching tag found
   return NULL;
 }
+
 void init_cpus(struct stivale2_struct *hdr) {
   // Find tag with multi-core stuff
   smp = find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID);
+
+  uintptr_t cpu_stack = 0x80000000000;
+  size_t user_stack_size = 8 * PAGE_SIZE;
+  
   // For each cpu initialize the stack
   for (int i = 0; i < smp->cpu_count; i++) {
-    uintptr_t cpu_stack = 0x70000000000 + 8 * PAGE_SIZE * i;
-    size_t user_stack_size = 8 * PAGE_SIZE;
 
     // Map the user-mode-stack
-    for (uintptr_t p = cpu_stack; p < cpu_stack + user_stack_size;
-         p += 0x1000) {
+    for (uintptr_t p = cpu_stack; p < cpu_stack + user_stack_size; p += 0x1000) {
       // Map a page that is user-accessible, writable, but not executable
       vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, p, true, true, false);
     }
 
     smp->smp_info[i].target_stack = cpu_stack;
+    cpu_stack += user_stack_size;
   }
 }

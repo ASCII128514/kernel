@@ -90,27 +90,27 @@ void func() {
   halt();
 }
 
-void func2() { halt(); }
+// void func2() { halt(); }
 
-int available_cpus[] = {false, true, true, true};
+// int available_cpus[] = {false, true, true, true};
 
-int fork() {
-  kprintf("address here %p\n", ADDRESS_HERE());
-  for (int i = 0; i < 4; i++) {
-    kprintf("here\n");
-    if (available_cpus[i]) {
-      kprintf("here1, %d\n", i);
-      available_cpus[i] = false;
-      smp->smp_info[i].goto_address = (uint64_t)(ADDRESS_HERE());
-      return i;
-    }
-  }
-  return -1;
-}
+// int fork() {
+//   kprintf("address here %p\n", ADDRESS_HERE());
+//   for (int i = 0; i < 4; i++) {
+//     kprintf("here\n");
+//     if (available_cpus[i]) {
+//       kprintf("here1, %d\n", i);
+//       available_cpus[i] = false;
+//       smp->smp_info[i].goto_address = (uint64_t)(ADDRESS_HERE());
+//       return i;
+//     }
+//   }
+//   return -1;
+// }
 
 void _start(struct stivale2_struct *hdr) {
   // We've booted! Let's start processing tags passed to use from the bootloader
-  term_setup(hdr);
+  // term_setup(hdr);
 
   // Set up the interrupt descriptor table and global descriptor table
   idt_setup();
@@ -137,38 +137,31 @@ void _start(struct stivale2_struct *hdr) {
   // Unmap the lower half of memory
   uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
   unmap_lower_half(root);
-  kprintf("here\n");
 
   // Initialize the stacks for each cpu
   init_cpus(hdr);
 
-  kprintf("here\n");
+  // kprintf("here\n");
   kprintf("smp: %p\n", smp);
   for (int i = 1; i < smp->cpu_count; i++) {
+    kprintf("target stack of %d: %p\n", i, smp->smp_info[i].target_stack);
     kprintf("goto address of %d: %p\n", i, smp->smp_info[i].goto_address);
   }
 
-  /* kprintf("%d\n", start_other_core(func)); */
-  /* int a = fork(); */
-  /* kprintf("here a: %d \n", a); */
-  /* halt(); */
-
-  /* for (int i = 1; i < smp->cpu_count; i++) { */
-  /*   smp->smp_info[i].goto_address = (uint64_t)(func); */
-  /* } */
-
+  kprintf("%p\n", func);
   // Get information about the modules we've asked the bootloader to load
-  struct stivale2_struct_tag_modules *modules =
-      find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);
+  struct stivale2_struct_tag_modules *modules = find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);
   // Save information about the modules to be accessed later when we make an
   // exec system call
   module_setup(modules);
 
   kprintf("number of tags: %d\n", smp->cpu_count);
+
   // Launch the init program
   for (int i = 0; i < modules->module_count; i++) {
-    if (!strcmp(modules->modules[i].string, "init")) {
-      run_program(modules->modules[i].begin);
+    if (strcmp(modules->modules[i].string, "init") == 0) {
+      run_program_kernel(modules->modules[i].begin);
+      // run_program(modules->modules[i].begin);
     }
   }
 
