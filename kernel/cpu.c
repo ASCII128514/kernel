@@ -12,18 +12,21 @@ struct stivale2_struct_tag_smp* get_smp() {
 void init_cpus(struct stivale2_struct_tag_smp *param_smp) {
   // set tag with multi-core stuff
   smp = param_smp;
+
+  uintptr_t cpu_stack = 0x80000000000;
+  size_t cpu_stack_size = 8 * PAGE_SIZE;
+
   // For each cpu initialize the stack
   for (int i = 0; i < smp->cpu_count; i++) {
-    uintptr_t cpu_stack = 0x70000000000 + 8 * PAGE_SIZE * i;
-    size_t user_stack_size = 8 * PAGE_SIZE;
 
-    // Map the user-mode-stack
-    for (uintptr_t p = cpu_stack; p < cpu_stack + user_stack_size; p += 0x1000) {
+    // Map the cpu-stack
+    for (uintptr_t p = cpu_stack; p < cpu_stack + cpu_stack_size; p += 0x1000) {
       // Map a page that is user-accessible, writable, but not executable
       vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, p, true, true, false);
     }
 
     smp->smp_info[i].target_stack = cpu_stack;
+    cpu_stack += cpu_stack_size;
   }
 }
 
