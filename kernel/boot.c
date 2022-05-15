@@ -113,10 +113,8 @@ void term_setup(struct stivale2_struct *hdr)
 // }
 
 void printer() {
-
   kprintf("kprint.hhhhhhhhh\n");
-
-  sleep_cpu(1);
+  sleep_cpu();
 }
 
 void _start(struct stivale2_struct *hdr)
@@ -154,11 +152,13 @@ void _start(struct stivale2_struct *hdr)
   // Initialize the stacks for each cpu
   init_cpus(find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID));
 
-  int cpu_id = set_cpu_task(printer);
+  int cpu_id1 = set_cpu_task(printer);
+  int cpu_id2 = set_cpu_task(printer);
 
-  kprintf("in the main thread after setting to %d cpu\n", cpu_id);
+  kprintf("in the main thread after setting\n");
 
-  wait_for_cpu(cpu_id);
+  wait_for_cpu(cpu_id1);
+  wait_for_cpu(cpu_id2);
   
   kprintf("homie dis core finished waitin\n");
 

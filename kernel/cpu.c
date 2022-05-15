@@ -44,9 +44,27 @@ uint64_t set_cpu_task(void* address) {
     return -1;
 }
 
+int indentify_cpu() {
+
+    int x = 0;
+    uintptr_t address = (uintptr_t) (&x);
+
+    if (address >= 0x80000000000 && address < 0x80000008000) {
+        return 1;
+    } else if (address >= 0x80000008000 && address < 0x80000010000) {
+        return 2;
+    } else if (address >= 0x80000010000 && address < 0x80000018000) {
+        return 3;
+    }
+
+    return -1;
+}
+
 typedef void (*exec_t)();
 
-void sleep_cpu(int cpu_id) {
+void sleep_cpu() {
+
+    int cpu_id = indentify_cpu();
 
     smp->smp_info[cpu_id].goto_address = 0;
 
