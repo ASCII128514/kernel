@@ -1,6 +1,13 @@
 #include "cpu.h"
+#include "lock.h"
 
 struct stivale2_struct_tag_smp* smp;
+
+lock_t my_lock = {.num_locks = 1};
+
+struct stivale2_struct_tag_smp* get_smp() {
+    return smp;
+}
 
 void init_cpus(struct stivale2_struct_tag_smp *param_smp) {
   // set tag with multi-core stuff
@@ -19,6 +26,7 @@ void init_cpus(struct stivale2_struct_tag_smp *param_smp) {
     smp->smp_info[i].target_stack = cpu_stack;
   }
 }
+
 
 uint64_t set_cpu_task(void* address) {
 
@@ -40,9 +48,12 @@ void sleep_cpu(int cpu_id) {
     smp->smp_info[cpu_id].goto_address = 0;
 
     while (1) {
+        lock(&my_lock);
         if (smp->smp_info[cpu_id].goto_address != 0){
+            unlock(&my_lock);
             break;
         }
+        unlock(&my_lock);
     }
 
     exec_t new_jump_point = (exec_t) (smp->smp_info[cpu_id].goto_address);
@@ -53,10 +64,15 @@ void sleep_cpu(int cpu_id) {
 int wait_for_cpu(int cpu_id) {
 
     while (1) {
+        lock(&my_lock);
         if (smp->smp_info[cpu_id].goto_address == 0){
+            unlock(&my_lock);
             break;
         }
+        unlock(&my_lock);
     }
+
+    kprintf("I'm done waiting!!!\n");
 
     return 1;
 }

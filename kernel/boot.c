@@ -113,7 +113,9 @@ void term_setup(struct stivale2_struct *hdr)
 // }
 
 void printer() {
+
   kprintf("kprint.hhhhhhhhh\n");
+
   sleep_cpu(1);
 }
 
@@ -146,8 +148,8 @@ void _start(struct stivale2_struct *hdr)
   uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
   unmap_lower_half(root);
 
-  setup_letter_count();
-  letter_count();
+  // setup_letter_count();
+  // letter_count();
 
   // Initialize the stacks for each cpu
   init_cpus(find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID));
@@ -155,7 +157,9 @@ void _start(struct stivale2_struct *hdr)
   int cpu_id = set_cpu_task(printer);
 
   kprintf("in the main thread after setting to %d cpu\n", cpu_id);
-  wait_for_cpu(1);
+
+  wait_for_cpu(cpu_id);
+  
   kprintf("homie dis core finished waitin\n");
 
   // // Get information about the modules we've asked the bootloader to load
