@@ -13,7 +13,6 @@
 #define PAGE_SIZE 4096
 
 static uint64_t virtual_offset;
-extern struct stivale2_struct_tag_smp *smp;
 
 // Format for the entry in a page table
 typedef struct page_table {
@@ -111,7 +110,5 @@ void unmap_lower_half(uintptr_t root);
 
 // Invalidate a TLB entry to get rid of cached address transalations which are no longer accurate
 void invalidate_tlb(uintptr_t virtual_address);
-
-void init_cpus(struct stivale2_struct *hdr);
 
 void *find_tag(struct stivale2_struct *hdr, uint64_t id);

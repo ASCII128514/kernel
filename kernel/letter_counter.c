@@ -18,14 +18,14 @@ int tally[] = {0, 0, 0, 0, 0,
 lock_t tally_locks[26];
 lock_t range_lock = {.num_locks = 1};
 
-void setup_letter_count(char *str)
+void setup_letter_count()
 {
     for (int i = 0; i < 26; i++)
     {
         tally_locks[i].num_locks = 1;
     }
 
-    input_len = strlen(str);
+    input_len = strlen(input_str);
 }
 
 void print_tally()

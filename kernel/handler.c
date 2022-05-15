@@ -168,9 +168,6 @@ int64_t syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2
   case SYS_exit:
     return sys_exit(arg0);
 
-  case SYS_start_other_core:
-    return sys_start_othercore(arg0);
-
   default:
     return 0;
   }

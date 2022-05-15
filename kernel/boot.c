@@ -15,7 +15,7 @@
 #include "posix.h"
 #include "stivale2.h"
 #include "util.h"
-#include "word-count.h"
+#include "cpu.h"
 
 // https://stackoverflow.com/questions/865862/printf-the-current-address-in-c-program
 #define ADDRESS_HERE()                                                         \
@@ -79,34 +79,39 @@ void term_setup(struct stivale2_struct *hdr) {
   // set_term_write((term_write_t)tag->term_write);
 }
 
-int lock_int = 1;
+// int lock_int = 1;
 
-lock_t our_lock = {.num_locks = 1};
+// lock_t our_lock = {.num_locks = 1};
 
-void func() {
-  lock(&our_lock);
-  kprintf("hello world\n");
-  kprintf("%d\n", our_lock.num_locks);
-  unlock(&our_lock);
-  halt();
-}
+// void func() {
+//   lock(&our_lock);
+//   kprintf("hello world\n");
+//   kprintf("%d\n", our_lock.num_locks);
+//   unlock(&our_lock);
+//   halt();
+// }
 
-void func2() { halt(); }
+// void func2() { halt(); }
 
-int available_cpus[] = {false, true, true, true};
+// int available_cpus[] = {false, true, true, true};
 
-int fork() {
-  kprintf("address here %p\n", ADDRESS_HERE());
-  for (int i = 0; i < 4; i++) {
-    kprintf("here\n");
-    if (available_cpus[i]) {
-      kprintf("here1, %d\n", i);
-      available_cpus[i] = false;
-      smp->smp_info[i].goto_address = (uint64_t)(ADDRESS_HERE());
-      return i;
-    }
-  }
-  return -1;
+// int fork() {
+//   kprintf("address here %p\n", ADDRESS_HERE());
+//   for (int i = 0; i < 4; i++) {
+//     kprintf("here\n");
+//     if (available_cpus[i]) {
+//       kprintf("here1, %d\n", i);
+//       available_cpus[i] = false;
+//       smp->smp_info[i].goto_address = (uint64_t)(ADDRESS_HERE());
+//       return i;
+//     }
+//   }
+//   return -1;
+// }
+
+void printer() {
+  kprintf("kprint.hhhhhhhhh\n");
+  sleep_cpu(1);
 }
 
 void _start(struct stivale2_struct *hdr) {
@@ -118,12 +123,10 @@ void _start(struct stivale2_struct *hdr) {
   gdt_setup();
 
   // Find the start of higher half direct map (virtual memory)
-  struct stivale2_struct_tag_hhdm *virtual = find_tag(
-      hdr, STIVALE2_STRUCT_TAG_HHDM_ID);
+  struct stivale2_struct_tag_hhdm *virtual = find_tag(hdr, STIVALE2_STRUCT_TAG_HHDM_ID);
 
   // Get information about physical memory
-  struct stivale2_struct_tag_memmap *physical =
-      find_tag(hdr, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+  struct stivale2_struct_tag_memmap *physical = find_tag(hdr, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
   // Set up the free list and enable write protection
   freelist_init(virtual, physical);
@@ -138,42 +141,29 @@ void _start(struct stivale2_struct *hdr) {
   // Unmap the lower half of memory
   uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
   unmap_lower_half(root);
-  kprintf("here\n");
 
   // Initialize the stacks for each cpu
-  init_cpus(hdr);
+  init_cpus(find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID));
 
-  kprintf("here\n");
-  kprintf("smp: %p\n", smp);
-  // word_count_main(int argc, char **argv);
-  for (int i = 1; i < smp->cpu_count; i++)
-  {
-    kprintf("goto address of %d: %p\n", i, smp->smp_info[i].goto_address);
-  }
+  int cpu_id = set_cpu_task(printer);
 
-  /* kprintf("%d\n", start_other_core(func)); */
-  /* int a = fork(); */
-  /* kprintf("here a: %d \n", a); */
-  /* halt(); */
+  kprintf("in the main thread after setting to %d cpu\n", cpu_id);
+  wait_for_cpu(1);
+  kprintf("homie dis core finished waitin\n");
 
-  /* for (int i = 1; i < smp->cpu_count; i++) { */
-  /*   smp->smp_info[i].goto_address = (uint64_t)(func); */
-  /* } */
+  // // Get information about the modules we've asked the bootloader to load
+  // struct stivale2_struct_tag_modules *modules =find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);
+  // // Save information about the modules to be accessed later when we make an
+  // // exec system call
+  // module_setup(modules);
 
-  // Get information about the modules we've asked the bootloader to load
-  struct stivale2_struct_tag_modules *modules =
-      find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);
-  // Save information about the modules to be accessed later when we make an
-  // exec system call
-  module_setup(modules);
-
-  kprintf("number of tags: %d\n", smp->cpu_count);
-  // Launch the init program
-  for (int i = 0; i < modules->module_count; i++) {
-    if (!strcmp(modules->modules[i].string, "init")) {
-      run_program(modules->modules[i].begin);
-    }
-  }
+  // // kprintf("number of tags: %d\n", smp->cpu_count);
+  // // Launch the init program
+  // for (int i = 0; i < modules->module_count; i++) {
+  //   if (!strcmp(modules->modules[i].string, "init")) {
+  //     run_program(modules->modules[i].begin);
+  //   }
+  // }
 
   halt();
 }
