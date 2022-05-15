@@ -1,4 +1,4 @@
-// #include <stdio.h>
+// // #include <stdio.h>
 // #include <stdlib.h>
 // #include <stdint.h>
 // #include <unistd.h>
@@ -167,7 +167,7 @@
 //     exit(1);
 //   }
 
-//   char * str = "asdasdasdasdasd";
+//   char *str = "asdasdasdasdasd";
 //   // Call the function to count letter frequencies
 //   count_letters(num_threads, str, strlen(str));
 

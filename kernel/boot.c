@@ -16,13 +16,15 @@
 #include "stivale2.h"
 #include "util.h"
 #include "cpu.h"
+#include "letter_counter.h"
 
 // https://stackoverflow.com/questions/865862/printf-the-current-address-in-c-program
-#define ADDRESS_HERE()                                                         \
-  ({                                                                           \
-    void *p;                                                                   \
-    __asm__("1: mov 1b, %0" : "=r"(p));                                        \
-    p;                                                                         \
+#define ADDRESS_HERE()      \
+  ({                        \
+    void *p;                \
+    __asm__("1: mov 1b, %0" \
+            : "=r"(p));     \
+    p;                      \
   })
 
 lock_t fork_lock = {.num_locks = 1};
@@ -66,7 +68,8 @@ __attribute__((section(".stivale2hdr"),
     // First tag struct
     .tags = (uintptr_t)&smp_tag};
 
-void term_setup(struct stivale2_struct *hdr) {
+void term_setup(struct stivale2_struct *hdr)
+{
   // Look for a terminal tag
   struct stivale2_struct_tag_terminal *tag =
       find_tag(hdr, STIVALE2_STRUCT_TAG_TERMINAL_ID);
@@ -114,7 +117,8 @@ void printer() {
   sleep_cpu(1);
 }
 
-void _start(struct stivale2_struct *hdr) {
+void _start(struct stivale2_struct *hdr)
+{
   // We've booted! Let's start processing tags passed to use from the bootloader
   term_setup(hdr);
 
@@ -141,6 +145,9 @@ void _start(struct stivale2_struct *hdr) {
   // Unmap the lower half of memory
   uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
   unmap_lower_half(root);
+
+  setup_letter_count();
+  letter_count();
 
   // Initialize the stacks for each cpu
   init_cpus(find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID));

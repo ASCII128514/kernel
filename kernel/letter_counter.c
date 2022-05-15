@@ -5,9 +5,10 @@
 
 #include "letter_counter.h"
 
+#define NUM_CPU 3
+
 char *input_str = "this is our string";
 int input_len;
-int num_cpu = 3;
 
 int tally[] = {0, 0, 0, 0, 0,
                0, 0, 0, 0, 0,
@@ -17,6 +18,7 @@ int tally[] = {0, 0, 0, 0, 0,
 
 lock_t tally_locks[26];
 lock_t range_lock = {.num_locks = 1};
+lock_t print_lock[NUM_CPU];
 
 void setup_letter_count()
 {
@@ -25,11 +27,22 @@ void setup_letter_count()
         tally_locks[i].num_locks = 1;
     }
 
+    for (int i = 0; i < NUM_CPU; i++)
+    {
+        print_lock[i].num_locks = 0;
+    }
+
     input_len = strlen(input_str);
 }
 
 void print_tally()
 {
+    for (int i = 0; i < NUM_CPU; i++)
+    {
+        lock(&print_lock[i]);
+        unlock(&print_lock[i]);
+    }
+
     for (int i = 0; i < 26; i++)
     {
         kprintf("%c: %d | ", 'a' + i, tally[i]);
@@ -39,11 +52,13 @@ void print_tally()
 int cpu_count = 0;
 void letter_count()
 {
-    int x = input_len / num_cpu;
+    int x = input_len / NUM_CPU;
 
     lock(&range_lock);
+    int cpu = cpu_count;
     int start = x * cpu_count;
     int end = cpu_count == 2 ? input_len : start + x;
+    cpu_count++;
     unlock(&range_lock);
 
     for (int i = start; i < end; i++)
@@ -55,4 +70,6 @@ void letter_count()
             unlock(&(tally_locks[input_str[i] - 'a']));
         }
     }
+
+    unlock(&print_lock[cpu]);
 }
