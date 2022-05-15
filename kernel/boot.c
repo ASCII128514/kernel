@@ -15,14 +15,15 @@
 #include "posix.h"
 #include "stivale2.h"
 #include "util.h"
-#include "word-count.h"
+#include "letter_counter.h"
 
 // https://stackoverflow.com/questions/865862/printf-the-current-address-in-c-program
-#define ADDRESS_HERE()                                                         \
-  ({                                                                           \
-    void *p;                                                                   \
-    __asm__("1: mov 1b, %0" : "=r"(p));                                        \
-    p;                                                                         \
+#define ADDRESS_HERE()      \
+  ({                        \
+    void *p;                \
+    __asm__("1: mov 1b, %0" \
+            : "=r"(p));     \
+    p;                      \
   })
 
 lock_t fork_lock = {.num_locks = 1};
@@ -66,7 +67,8 @@ __attribute__((section(".stivale2hdr"),
     // First tag struct
     .tags = (uintptr_t)&smp_tag};
 
-void term_setup(struct stivale2_struct *hdr) {
+void term_setup(struct stivale2_struct *hdr)
+{
   // Look for a terminal tag
   struct stivale2_struct_tag_terminal *tag =
       find_tag(hdr, STIVALE2_STRUCT_TAG_TERMINAL_ID);
@@ -83,7 +85,8 @@ int lock_int = 1;
 
 lock_t our_lock = {.num_locks = 1};
 
-void func() {
+void func()
+{
   lock(&our_lock);
   kprintf("hello world\n");
   kprintf("%d\n", our_lock.num_locks);
@@ -95,11 +98,14 @@ void func2() { halt(); }
 
 int available_cpus[] = {false, true, true, true};
 
-int fork() {
+int fork()
+{
   kprintf("address here %p\n", ADDRESS_HERE());
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++)
+  {
     kprintf("here\n");
-    if (available_cpus[i]) {
+    if (available_cpus[i])
+    {
       kprintf("here1, %d\n", i);
       available_cpus[i] = false;
       smp->smp_info[i].goto_address = (uint64_t)(ADDRESS_HERE());
@@ -109,7 +115,8 @@ int fork() {
   return -1;
 }
 
-void _start(struct stivale2_struct *hdr) {
+void _start(struct stivale2_struct *hdr)
+{
   // We've booted! Let's start processing tags passed to use from the bootloader
   term_setup(hdr);
 
@@ -140,6 +147,9 @@ void _start(struct stivale2_struct *hdr) {
   unmap_lower_half(root);
   kprintf("here\n");
 
+  setup_letter_count();
+  letter_count();
+
   // Initialize the stacks for each cpu
   init_cpus(hdr);
 
@@ -169,8 +179,10 @@ void _start(struct stivale2_struct *hdr) {
 
   kprintf("number of tags: %d\n", smp->cpu_count);
   // Launch the init program
-  for (int i = 0; i < modules->module_count; i++) {
-    if (!strcmp(modules->modules[i].string, "init")) {
+  for (int i = 0; i < modules->module_count; i++)
+  {
+    if (!strcmp(modules->modules[i].string, "init"))
+    {
       run_program(modules->modules[i].begin);
     }
   }
