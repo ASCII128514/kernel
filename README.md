@@ -15,3 +15,10 @@ In addition to the above example projects, the following references were used wh
 - [Stivale2 Reference](https://github.com/stivale/stivale/blob/master/STIVALE2.md)
 
 # Multi-core processing
+
+The multi-core elements are all in the letter_counter2.c, letter_counter2.h, cpu.c, cpu.h, lock.c, and lock.h files.
+The demo is in the boot.c file. The demos can be independently ran or all together.
+Demo 1 and 3 just demonstate that it can correctly tally letters.
+Demo 2 and 4 show the multi-core aspects of the code. Demo 2 shows what happens when only 2 of the 3 CPUs run the code
+Demo 4 shows what happens when the main CPU does not wait for the child processes to finish. In this case the result depends
+on the order that the CPUs run. In some cases it may finish the counting before printing, in other cases it won't count all the letters.
