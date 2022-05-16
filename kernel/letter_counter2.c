@@ -8,8 +8,6 @@
 
 #define NUM_CPU 3
 
-// char *input_str = "aaaa aaaa aaaa ";
-char *input_str = "the quick brown fox jumps over the lazy dog";
 int input_len;
 int cpu_count;
 int tally[26];
@@ -19,23 +17,29 @@ lock_t range_lock = {.num_locks = 1};
 
 void setup_letter_count()
 {
-    kprintf("%s\n", input_str);
+    kprintf("Input string:\n%s\n", input_str);
 
+    input_len = strlen(input_str);
     cpu_count = 0;
+
     for (int i = 0; i < 26; i++)
     {
         tally[i] = 0;
         tally_locks[i].num_locks = 1;
     }
-
-    input_len = strlen(input_str);
 }
 
 void print_tally()
 {
     for (int i = 0; i < 26; i++)
     {
+
         kprintf("%c: %d | ", 'a' + i, tally[i]);
+
+        if (i % 4 == 3)
+        {
+            kprintf("\n");
+        }
     }
     kprintf("\n");
 }
@@ -47,7 +51,6 @@ void letter_count()
     lock(&range_lock);
     int start = x * cpu_count;
     int end = cpu_count == NUM_CPU - 1 ? input_len : start + x;
-    // int end = cpu_count == NUM_CPU - 1 ? 0 : start + x;
     cpu_count++;
     unlock(&range_lock);
 

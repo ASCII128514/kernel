@@ -148,36 +148,68 @@ void _start(struct stivale2_struct *hdr)
   uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
   unmap_lower_half(root);
 
-  setup_letter_count();
-  // letter_count();
-
   // Initialize the stacks for each cpu
   init_cpus(find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID));
+
+  // ************************************************* <  DEMO 1 > *************************************************
+
+  // kprintf("Setting up letter count --------------------\n");
+  // input_str = "the quick brown fox jumps over the lazy dog";
+  // setup_letter_count();
+
+  // int cpu_id1 = set_cpu_task(letter_count);
+  // int cpu_id2 = set_cpu_task(letter_count);
+  // int cpu_id3 = set_cpu_task(letter_count);
+  // wait_for_cpu(cpu_id1);
+  // wait_for_cpu(cpu_id2);
+  // wait_for_cpu(cpu_id3);
+
+  // kprintf("Finished waiting for all cores\n");
+  // print_tally();
+
+  // kprintf("\nSetting up letter count --------------------\n");
+  // input_str = "wow, what a cool fox";
+  // setup_letter_count();
+
+  // cpu_id1 = set_cpu_task(letter_count);
+  // cpu_id2 = set_cpu_task(letter_count);
+  // cpu_id3 = set_cpu_task(letter_count);
+  // wait_for_cpu(cpu_id1);
+  // wait_for_cpu(cpu_id2);
+  // wait_for_cpu(cpu_id3);
+
+  // kprintf("Finished waiting for all cores\n");
+
+  // print_tally();
+
+  // ************************************************* <  DEMO 2 > *************************************************
+
+  kprintf("Setting up letter count --------------------\n");
+  input_str = "abcd efgh ijkl ";
+  setup_letter_count();
 
   int cpu_id1 = set_cpu_task(letter_count);
   int cpu_id2 = set_cpu_task(letter_count);
   int cpu_id3 = set_cpu_task(letter_count);
-
-  // kprintf("in the main thread after setting\n");
-
   wait_for_cpu(cpu_id1);
   wait_for_cpu(cpu_id2);
   wait_for_cpu(cpu_id3);
 
-  kprintf("homie dis core finished waitin\n");
-
+  kprintf("Finished waiting for all cores\n");
   print_tally();
 
+  kprintf("\nSetting up letter count --------------------\n");
+  input_str = "abcd efgh ijkl ";
   setup_letter_count();
-  cpu_id1 = set_cpu_task(letter_count);
-  cpu_id2 = set_cpu_task(letter_count);
-  cpu_id3 = set_cpu_task(letter_count);
 
+  cpu_id1 = set_cpu_task(letter_count);
+
+  cpu_id3 = set_cpu_task(letter_count);
   wait_for_cpu(cpu_id1);
-  wait_for_cpu(cpu_id2);
+
   wait_for_cpu(cpu_id3);
 
-  kprintf("homie dis core finished waitin\n");
+  kprintf("Finished waiting for all cores\n");
 
   print_tally();
 
