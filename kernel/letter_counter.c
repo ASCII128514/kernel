@@ -7,7 +7,7 @@
 
 #define NUM_CPU 3
 
-char *input_str = "this is our string";
+char *input_str = "aaaa aaaa aaaa ";
 int input_len;
 
 int tally[] = {0, 0, 0, 0, 0,
@@ -57,7 +57,8 @@ void letter_count()
     lock(&range_lock);
     int cpu = cpu_count;
     int start = x * cpu_count;
-    int end = cpu_count == 2 ? input_len : start + x;
+    int end = cpu_count == NUM_CPU - 1 ? input_len : start + x;
+    // int end = cpu_count == NUM_CPU - 1 ? 0 : start + x;
     cpu_count++;
     unlock(&range_lock);
 
@@ -72,4 +73,7 @@ void letter_count()
     }
 
     unlock(&print_lock[cpu]);
+
+    while (1)
+        ;
 }

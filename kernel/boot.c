@@ -148,7 +148,8 @@ void _start(struct stivale2_struct *hdr)
   kprintf("here\n");
 
   setup_letter_count();
-  letter_count();
+  // letter_count();
+  // print_tally();
 
   // Initialize the stacks for each cpu
   init_cpus(hdr);
@@ -159,7 +160,10 @@ void _start(struct stivale2_struct *hdr)
   for (int i = 1; i < smp->cpu_count; i++)
   {
     kprintf("goto address of %d: %p\n", i, smp->smp_info[i].goto_address);
+    smp->smp_info[i].goto_address = letter_count;
   }
+
+  print_tally();
 
   /* kprintf("%d\n", start_other_core(func)); */
   /* int a = fork(); */
