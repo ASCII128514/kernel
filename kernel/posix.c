@@ -148,13 +148,3 @@ int64_t sys_exit(int status) {
   }
   return status;
 }
-
-int64_t sys_start_othercore(uintptr_t address) {
-  for (int i = 1; i < smp->cpu_count; i++) {
-    if (smp->smp_info[i].goto_address == 0) {
-      smp->smp_info[i].goto_address = address;
-      return 1;
-    }
-  }
-  return -1;
-}

@@ -15,6 +15,7 @@
 #include "posix.h"
 #include "stivale2.h"
 #include "util.h"
+#include "cpu.h"
 #include "letter_counter.h"
 
 // https://stackoverflow.com/questions/865862/printf-the-current-address-in-c-program
@@ -81,38 +82,39 @@ void term_setup(struct stivale2_struct *hdr)
   // set_term_write((term_write_t)tag->term_write);
 }
 
-int lock_int = 1;
+// int lock_int = 1;
 
-lock_t our_lock = {.num_locks = 1};
+// lock_t our_lock = {.num_locks = 1};
 
-void func()
-{
-  lock(&our_lock);
-  kprintf("hello world\n");
-  kprintf("%d\n", our_lock.num_locks);
-  unlock(&our_lock);
-  halt();
-}
+// void func() {
+//   lock(&our_lock);
+//   kprintf("hello world\n");
+//   kprintf("%d\n", our_lock.num_locks);
+//   unlock(&our_lock);
+//   halt();
+// }
 
-void func2() { halt(); }
+// void func2() { halt(); }
 
-int available_cpus[] = {false, true, true, true};
+// int available_cpus[] = {false, true, true, true};
 
-int fork()
-{
-  kprintf("address here %p\n", ADDRESS_HERE());
-  for (int i = 0; i < 4; i++)
-  {
-    kprintf("here\n");
-    if (available_cpus[i])
-    {
-      kprintf("here1, %d\n", i);
-      available_cpus[i] = false;
-      smp->smp_info[i].goto_address = (uint64_t)(ADDRESS_HERE());
-      return i;
-    }
-  }
-  return -1;
+// int fork() {
+//   kprintf("address here %p\n", ADDRESS_HERE());
+//   for (int i = 0; i < 4; i++) {
+//     kprintf("here\n");
+//     if (available_cpus[i]) {
+//       kprintf("here1, %d\n", i);
+//       available_cpus[i] = false;
+//       smp->smp_info[i].goto_address = (uint64_t)(ADDRESS_HERE());
+//       return i;
+//     }
+//   }
+//   return -1;
+// }
+
+void printer() {
+  kprintf("kprint.hhhhhhhhh\n");
+  sleep_cpu();
 }
 
 void _start(struct stivale2_struct *hdr)
@@ -125,12 +127,10 @@ void _start(struct stivale2_struct *hdr)
   gdt_setup();
 
   // Find the start of higher half direct map (virtual memory)
-  struct stivale2_struct_tag_hhdm *virtual = find_tag(
-      hdr, STIVALE2_STRUCT_TAG_HHDM_ID);
+  struct stivale2_struct_tag_hhdm *virtual = find_tag(hdr, STIVALE2_STRUCT_TAG_HHDM_ID);
 
   // Get information about physical memory
-  struct stivale2_struct_tag_memmap *physical =
-      find_tag(hdr, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+  struct stivale2_struct_tag_memmap *physical = find_tag(hdr, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
   // Set up the free list and enable write protection
   freelist_init(virtual, physical);
@@ -145,8 +145,8 @@ void _start(struct stivale2_struct *hdr)
   // Unmap the lower half of memory
   uintptr_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
   unmap_lower_half(root);
-  kprintf("here\n");
 
+<<<<<<< HEAD
   setup_letter_count();
   // letter_count();
   // print_tally();
@@ -190,6 +190,37 @@ void _start(struct stivale2_struct *hdr)
       run_program(modules->modules[i].begin);
     }
   }
+=======
+  // setup_letter_count();
+  // letter_count();
+
+  // Initialize the stacks for each cpu
+  init_cpus(find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID));
+
+  int cpu_id1 = set_cpu_task(printer);
+  int cpu_id2 = set_cpu_task(printer);
+
+  kprintf("in the main thread after setting\n");
+
+  wait_for_cpu(cpu_id1);
+  wait_for_cpu(cpu_id2);
+  
+  kprintf("homie dis core finished waitin\n");
+
+  // // Get information about the modules we've asked the bootloader to load
+  // struct stivale2_struct_tag_modules *modules =find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);
+  // // Save information about the modules to be accessed later when we make an
+  // // exec system call
+  // module_setup(modules);
+
+  // // kprintf("number of tags: %d\n", smp->cpu_count);
+  // // Launch the init program
+  // for (int i = 0; i < modules->module_count; i++) {
+  //   if (!strcmp(modules->modules[i].string, "init")) {
+  //     run_program(modules->modules[i].begin);
+  //   }
+  // }
+>>>>>>> 9ba3a7c20167897d64a6b4997492f3bc6ba36abe
 
   halt();
 }

@@ -68,8 +68,6 @@ int64_t sys_exec(char *file, char *argv[]);
  */
 int64_t sys_exit(int status);
 
-int64_t sys_start_othercore(uintptr_t address);
-
 // Save information about the modules loaded by the bootloader in a global
 // variable
 void module_setup(struct stivale2_struct_tag_modules *modules);
