@@ -8,6 +8,7 @@
 
 #define NUM_CPU 3
 
+char *input_str;
 int input_len;
 int cpu_count;
 int tally[26];
@@ -15,8 +16,10 @@ int tally[26];
 lock_t tally_locks[26];
 lock_t range_lock = {.num_locks = 1};
 
-void setup_letter_count()
+void setup_letter_count(char *str)
 {
+    input_str = str;
+
     kprintf("Input string:\n%s\n", input_str);
 
     input_len = strlen(input_str);

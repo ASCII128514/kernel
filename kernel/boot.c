@@ -151,15 +151,46 @@ void _start(struct stivale2_struct *hdr)
   // Initialize the stacks for each cpu
   init_cpus(find_tag(hdr, STIVALE2_STRUCT_TAG_SMP_ID));
 
+  int cpu_id1;
+  int cpu_id2;
+  int cpu_id3;
+
   // ************************************************* <  DEMO 1 > *************************************************
 
-  // kprintf("Setting up letter count --------------------\n");
-  // input_str = "the quick brown fox jumps over the lazy dog";
-  // setup_letter_count();
+  kprintf("Setting up letter count --------------------\n");
+  setup_letter_count("the quick brown fox jumps over the lazy dog");
 
-  // int cpu_id1 = set_cpu_task(letter_count);
-  // int cpu_id2 = set_cpu_task(letter_count);
-  // int cpu_id3 = set_cpu_task(letter_count);
+  cpu_id1 = set_cpu_task(letter_count);
+  cpu_id2 = set_cpu_task(letter_count);
+  cpu_id3 = set_cpu_task(letter_count);
+  wait_for_cpu(cpu_id1);
+  wait_for_cpu(cpu_id2);
+  wait_for_cpu(cpu_id3);
+
+  kprintf("Finished waiting for all cores\n");
+  print_tally();
+
+  kprintf("\nSetting up letter count --------------------\n");
+  setup_letter_count("we can change the input sentence.");
+  cpu_id1 = set_cpu_task(letter_count);
+  cpu_id2 = set_cpu_task(letter_count);
+  cpu_id3 = set_cpu_task(letter_count);
+  wait_for_cpu(cpu_id1);
+  wait_for_cpu(cpu_id2);
+  wait_for_cpu(cpu_id3);
+
+  kprintf("Finished waiting for all cores\n");
+
+  print_tally();
+
+  // ************************************************* <  DEMO 2 > *************************************************
+
+  // kprintf("Setting up letter count --------------------\n");
+  // setup_letter_count("abcd efgh ijkl ");
+
+  // cpu_id1 = set_cpu_task(letter_count);
+  // cpu_id2 = set_cpu_task(letter_count);
+  // cpu_id3 = set_cpu_task(letter_count);
   // wait_for_cpu(cpu_id1);
   // wait_for_cpu(cpu_id2);
   // wait_for_cpu(cpu_id3);
@@ -168,9 +199,24 @@ void _start(struct stivale2_struct *hdr)
   // print_tally();
 
   // kprintf("\nSetting up letter count --------------------\n");
-  // input_str = "wow, what a cool fox";
-  // setup_letter_count();
+  // setup_letter_count("abcd efgh ijkl ");
 
+  // cpu_id1 = set_cpu_task(letter_count);
+
+  // cpu_id3 = set_cpu_task(letter_count);
+  // wait_for_cpu(cpu_id1);
+
+  // wait_for_cpu(cpu_id3);
+
+  // kprintf("Finished waiting for all cores\n");
+
+  // print_tally();
+
+  // ************************************************* <  DEMO 3 > *************************************************
+
+  // kprintf("\nSetting up letter count --------------------\n");
+  // setup_letter_count("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+  // kprintf("There are 1000 a's\n");
   // cpu_id1 = set_cpu_task(letter_count);
   // cpu_id2 = set_cpu_task(letter_count);
   // cpu_id3 = set_cpu_task(letter_count);
@@ -182,36 +228,7 @@ void _start(struct stivale2_struct *hdr)
 
   // print_tally();
 
-  // ************************************************* <  DEMO 2 > *************************************************
-
-  kprintf("Setting up letter count --------------------\n");
-  input_str = "abcd efgh ijkl ";
-  setup_letter_count();
-
-  int cpu_id1 = set_cpu_task(letter_count);
-  int cpu_id2 = set_cpu_task(letter_count);
-  int cpu_id3 = set_cpu_task(letter_count);
-  wait_for_cpu(cpu_id1);
-  wait_for_cpu(cpu_id2);
-  wait_for_cpu(cpu_id3);
-
-  kprintf("Finished waiting for all cores\n");
-  print_tally();
-
-  kprintf("\nSetting up letter count --------------------\n");
-  input_str = "abcd efgh ijkl ";
-  setup_letter_count();
-
-  cpu_id1 = set_cpu_task(letter_count);
-
-  cpu_id3 = set_cpu_task(letter_count);
-  wait_for_cpu(cpu_id1);
-
-  wait_for_cpu(cpu_id3);
-
-  kprintf("Finished waiting for all cores\n");
-
-  print_tally();
+  // ************************************************* <  END OF DEMOS > *************************************************
 
   // // Get information about the modules we've asked the bootloader to load
   // struct stivale2_struct_tag_modules *modules =find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);

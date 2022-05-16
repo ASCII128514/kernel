@@ -8,8 +8,9 @@
 // #define NUM_CPU 3
 
 // char *input_str = "aaaa aaaa aaaa ";
-// int input_len;
 
+// //
+// int input_len;
 // int tally[] = {0, 0, 0, 0, 0,
 //                0, 0, 0, 0, 0,
 //                0, 0, 0, 0, 0,
@@ -58,7 +59,6 @@
 //     int cpu = cpu_count;
 //     int start = x * cpu_count;
 //     int end = cpu_count == NUM_CPU - 1 ? input_len : start + x;
-//     // int end = cpu_count == NUM_CPU - 1 ? 0 : start + x;
 //     cpu_count++;
 //     unlock(&range_lock);
 
