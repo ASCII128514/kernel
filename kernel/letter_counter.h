@@ -1,7 +1,7 @@
-#pragma once
+// #pragma once
 
-void letter_count();
+// void letter_count();
 
-void setup_letter_count();
+// void setup_letter_count();
 
-void print_tally();
+// void print_tally();
