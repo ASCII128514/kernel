@@ -22,3 +22,6 @@ Demo 1 and 3 just demonstate that it can correctly tally letters.
 Demo 2 and 4 show the multi-core aspects of the code. Demo 2 shows what happens when only 2 of the 3 CPUs run the code
 Demo 4 shows what happens when the main CPU does not wait for the child processes to finish. In this case the result depends
 on the order that the CPUs run. In some cases it may finish the counting before printing, in other cases it won't count all the letters.
+
+letter_counter.c and letter_counter.h was our original version of letter counting with locks. This version was able to accomplish
+the task without requiring the wait and sleep cpu functions. We thought the solution was pretty poggers so we just kept it in.
