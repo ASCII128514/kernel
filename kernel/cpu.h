@@ -1,8 +1,9 @@
 #pragma once
 
 #include "stivale2.h"
-#include "stddef.h"
-#include "stdbool.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include "mem.h"
 
 /**
