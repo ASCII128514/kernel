@@ -11,7 +11,7 @@ void func() {
 }
 
 void _start() {
-  printf("here: %d\n", start_other_core(func));
+  printf("here: %d\n", start_other_core((uint64_t)func));
   // Start the shell
   exec("shell", NULL);
   exit(0);
